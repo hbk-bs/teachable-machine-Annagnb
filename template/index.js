@@ -26,11 +26,12 @@ function draw() {
     textSize(16);
     textAlign(CENTER);
     text("Erkannt: " + label, width / 2, 270); 
-}
+
     drawBoard(); 
 
 function classifyVideo() {
     classifier.classify(video, gotResult); 
+}
 }
 
 function gotResult(results) {
