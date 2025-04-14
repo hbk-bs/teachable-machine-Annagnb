@@ -5,9 +5,11 @@ let video;
 let label = '';
 let board = ['', '', '', '', '', '', '', '', '']; 
 let currentIndex = 0; 
+let inputReady = true; 
+let currentPlayer = 'X'; 
+
 function preload() {
     classifier = ml5.imageClassifier(imageModelURL + 'model.json');
-    console.log(classifier);
 }
 
 function setup() {
@@ -26,39 +28,47 @@ function draw() {
     textSize(16);
     textAlign(CENTER);
     text("Erkannt: " + label, width / 2, 270); 
+    text("Aktueller Spieler: " + currentPlayer, width / 2, 295); 
 
-    drawBoard(); 
+    drawBoard();
+	
+	if (inputReady && label === currentPlayer.toLowerCase() && board[currentIndex] === '') {
+		board[currentIndex] = currentPlayer;
+		inputReady = false;
+		currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+	}
+    
+}
 
 function classifyVideo() {
     classifier.classify(video, gotResult); 
 }
-}
 
 function gotResult(results) {
-    console.log(results);
-    label = results[0].label; 
-}
-    
-    if ((label === 'X' || label === 'O') && board[currentIndex] === '') {
-        board[currentIndex] = label;
-        currentIndex = (currentIndex + 1) % 9; 
-
+    if (results && results[0]) {
+        label = results[0].label; 
+    }
     classifyVideo(); 
+}
 
 function keyPressed() {
-    
     if (key === 'ArrowRight') {
-        currentIndex = (currentIndex + 1) % 9; 
+        currentIndex = (currentIndex + 1) % 9;
+        inputReady = true; 
     }
     if (key === 'ArrowLeft') {
-        currentIndex = (currentIndex + 8) % 9; 
+        currentIndex = (currentIndex + 8) % 9;
+        inputReady = true;
     }
     if (key === 'ArrowUp') {
-        currentIndex = (currentIndex + 6) % 9; 
+        currentIndex = (currentIndex + 6) % 9;
+        inputReady = true;
     }
     if (key === 'ArrowDown') {
-        currentIndex = (currentIndex + 3) % 9; 
-}}
+        currentIndex = (currentIndex + 3) % 9;
+        inputReady = true;
+    }
+}
 
 function drawBoard() {
     let size = 100; 
@@ -69,7 +79,6 @@ function drawBoard() {
         noFill();
         rect(x, y, size, size); 
 
-        
         fill("pink"); 
         textSize(32);
         textAlign(CENTER, CENTER);
@@ -84,5 +93,3 @@ function drawBoard() {
         }
     }
 }
-
-//bittefunktionier lol
