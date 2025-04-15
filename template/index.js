@@ -1,5 +1,5 @@
 let classifier;
-let imageModelURL = 'https://teachablemachine.withgoogle.com/models/UGABDL5F4/';
+let imageModelURL = 'https://teachablemachine.withgoogle.com/models/9dac-6h8u/';
 
 let video;
 let label = '';
@@ -9,6 +9,9 @@ let inputReady = true;
 let currentPlayer = 'X'; 
 let winner = null;
 let lastLabel = ''; // Speichert das zuletzt erkannte Symbol
+let scoreX = 0;
+let scoreO = 0;
+let gameMode = null;
 
 function preload() {
     classifier = ml5.imageClassifier(imageModelURL + 'model.json');
@@ -26,6 +29,14 @@ function setup() {
     button.position(20, 20);
     button.style('font-size', '16px');
     button.mousePressed(resetGame);
+
+    let pvpButton = createButton('Spieler vs. Spieler');
+    pvpButton.position(width / 2 - 100, height / 2 - 50);
+    pvpButton.mousePressed(() => gameMode = 'PVP');
+
+    let aiButton = createButton('Spieler vs. KI');
+    aiButton.position(width / 2 - 100, height / 2);
+    aiButton.mousePressed(() => gameMode = 'AI');
 }
 
 function draw() {
@@ -50,23 +61,26 @@ function draw() {
 
     drawBoard();
 
-    // Nur das richtige Symbol darf gesetzt werden
+    // Spielerzug
     if (!winner && inputReady && board[currentIndex] === '') {
-        // Prüfen, ob das erkannte Symbol mit dem aktuellen Spieler übereinstimmt
         if ((currentPlayer === 'X' && label.toLowerCase() === 'x') || 
             (currentPlayer === 'O' && label.toLowerCase() === 'o')) {
-            
-            // Symbol nur setzen, wenn es sich von dem zuletzt gesetzten unterscheidet
-            if (label !== lastLabel) {
-                console.log(`Setze ${currentPlayer} auf Position ${currentIndex}`);
-                board[currentIndex] = currentPlayer;
-                inputReady = false; // Eingabe blockieren, bis der Spieler die nächste Aktion ausführt
-                lastLabel = label; // Speichere das zuletzt gesetzte Symbol
-                winner = checkWinner();
-                if (!winner) {
-                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                }
+            console.log(`Setze ${currentPlayer} auf Position ${currentIndex}`);
+            board[currentIndex] = currentPlayer;
+            inputReady = false;
+            winner = checkWinner();
+            if (!winner) {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
             }
+        }
+    }
+
+    // KI-Zug
+    if (!winner && currentPlayer === 'O') {
+        aiMove();
+        winner = checkWinner(); // Prüfen, ob die KI gewonnen hat
+        if (!winner) {
+            currentPlayer = 'X'; // Wechsel zurück zum Spieler
         }
     }
 }
@@ -146,6 +160,8 @@ function checkWinner() {
     for (let combo of combos) {
         const [a, b, c] = combo;
         if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            if (board[a] === 'X') scoreX++;
+            if (board[a] === 'O') scoreO++;
             return board[a];
         }
     }
@@ -159,4 +175,39 @@ function resetGame() {
     inputReady = true;
     currentPlayer = 'X';
     winner = null;
+}
+
+function aiMove() {
+    console.log("KI macht einen Zug...");
+
+    // 1. Prüfen, ob die KI gewinnen kann
+    for (let i = 0; i < board.length; i++) {
+        if (board[i] === '') {
+            board[i] = 'O';
+            if (checkWinner() === 'O') {
+                console.log("KI gewinnt!");
+                return;
+            }
+            board[i] = ''; // Rückgängig machen
+        }
+    }
+
+    // 2. Prüfen, ob der Spieler gewinnen kann, und blockieren
+    for (let i = 0; i < board.length; i++) {
+        if (board[i] === '') {
+            board[i] = 'X';
+            if (checkWinner() === 'X') {
+                board[i] = 'O'; // Blockieren
+                console.log("KI blockiert!");
+                return;
+            }
+            board[i] = ''; // Rückgängig machen
+        }
+    }
+
+    // 3. Andernfalls das erste freie Feld wählen
+    let emptyFields = board.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+    let randomIndex = emptyFields[Math.floor(Math.random() * emptyFields.length)];
+    board[randomIndex] = 'O';
+    console.log(`KI setzt O auf Position ${randomIndex}`);
 }
