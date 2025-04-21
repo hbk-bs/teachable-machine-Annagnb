@@ -26,12 +26,12 @@ function setup() {
 
     // Reset-Button
     let button = createButton('Spiel zurücksetzen');
-    button.position(20, 20);
+    button.position(width / 2 - 120, height / 2 - 100);
     button.style('font-size', '16px');
     button.mousePressed(resetGame);
 
     let pvpButton = createButton('Spieler vs. Spieler');
-    pvpButton.position(width / 2 - 100, height / 2 - 50);
+    pvpButton.position(width / 2 - 120, height / 2 - 50);
     pvpButton.mousePressed(() => gameMode = 'PVP');
 
     let aiButton = createButton('Spieler vs. KI');
@@ -75,8 +75,8 @@ function draw() {
         }
     }
 
-    // KI-Zug
-    if (!winner && currentPlayer === 'O') {
+    // KI-Zug nur im Modus "Spieler vs. KI"
+    if (gameMode === 'AI' && !winner && currentPlayer === 'O') {
         aiMove();
         winner = checkWinner(); // Prüfen, ob die KI gewonnen hat
         if (!winner) {

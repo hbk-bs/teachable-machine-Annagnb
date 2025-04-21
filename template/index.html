@@ -3,36 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tictactoe</title>
+    
     <style>
-    html,
-    body {
-        height: 100%;
-    }
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #FFECEA; /* Hintergrundfarbe */
+        }
 
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    main {
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        align-items: flex-end;
-    }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        h1 {
+            margin: 20px 0;
+            text-align: center;
+            color: #424790; /* Dunkles Blau für die Überschrift */
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px; /* Abstand zwischen den Elementen */
+            flex-grow: 1;
+        }
+
+        #sketch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas {
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #F1A8C6; /* Rosa für die Buttons */
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #EB5200; /* Orange beim Hover */
+        }
+
+        a {
+            color: #424790; /* Dunkles Blau für den Link */
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-<main>
-    <div id="sketch"></div>
-    <a href="index.js">source code</a>
-    </main>
-		<script src="lib/ml5.1.2.1.min.js"></script>
-		<script src="lib/p5.min.js"></script>
-    <!-- <script src="lib/p5.sound.min.js"></script> -->
+    
 
+    <script src="lib/ml5.1.2.1.min.js"></script>
+    <script src="lib/p5.min.js"></script>
     <script src="index.js"></script>
 </body>
 </html>
