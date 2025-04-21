@@ -3,211 +3,206 @@ let imageModelURL = 'https://teachablemachine.withgoogle.com/models/9dac-6h8u/';
 
 let video;
 let label = '';
-let board = ['', '', '', '', '', '', '', '', '']; 
-let currentIndex = 0; 
-let inputReady = true; 
-let currentPlayer = 'X'; 
+let board = ['', '', '', '', '', '', '', '', ''];
+let currentIndex = 0;
+let inputReady = true;
+let currentPlayer = 'X';
 let winner = null;
-let lastLabel = ''; // Speichert das zuletzt erkannte Symbol
 let scoreX = 0;
 let scoreO = 0;
 let gameMode = null;
 
+let showWinnerMessage = false;
+let winnerMessage = '';
+let messageTimer = null;
+
 function preload() {
-    classifier = ml5.imageClassifier(imageModelURL + 'model.json');
+  classifier = ml5.imageClassifier(imageModelURL + 'model.json');
 }
 
 function setup() {
-    createCanvas(600, 700); 
-    video = createCapture(VIDEO);
-    video.size(200, 150);
-    video.hide();
-    classifyVideo();
+  let canvas = createCanvas(400, 700);
+  canvas.parent('sketch');
 
-    // Reset-Button
-    let button = createButton('Spiel zurücksetzen');
-    button.position(width / 2 - 120, height / 2 - 100);
-    button.style('font-size', '16px');
-    button.mousePressed(resetGame);
+  video = createCapture(VIDEO);
+  video.size(200, 150);
+  video.hide();
+  classifyVideo();
 
-    let pvpButton = createButton('Spieler vs. Spieler');
-    pvpButton.position(width / 2 - 120, height / 2 - 50);
-    pvpButton.mousePressed(() => gameMode = 'PVP');
-
-    let aiButton = createButton('Spieler vs. KI');
-    aiButton.position(width / 2 - 100, height / 2);
-    aiButton.mousePressed(() => gameMode = 'AI');
+  select('#resetButton').mousePressed(resetGame);
+  select('#pvpButton').mousePressed(() => {
+    gameMode = 'PVP';
+    resetGame();
+  });
+  select('#aiButton').mousePressed(() => {
+    gameMode = 'AI';
+    resetGame();
+  });
 }
 
 function draw() {
-    background('#FFECEA');
+  background('#FFECEA');
 
-    fill('#424790');
-    textSize(32);
-    textAlign(CENTER);
-    text('Tic Tac Teachable!', width / 2, 60);
+  select('#labelText').html('Erkannt: ' + label);
+  if (winner) {
+    select('#winnerText').html('Gewinner: ' + winner).style('display', 'block');
+  } else {
+    select('#winnerText').style('display', 'none');
+    select('#playerText').html('Spieler: ' + currentPlayer);
+  }
 
-    textSize(18);
-    text("Erkannt: " + label, width / 2, 270);
+  drawBoard();
 
-    if (winner) {
-        fill('#EB5200');
-        textSize(24);
-        text("Gewinner: " + winner, width / 2, 295);
-    } else {
-        fill('#424790');
-        text("Spieler: " + currentPlayer, width / 2, 295);
+  if (!winner && inputReady && board[currentIndex] === '') {
+    if ((currentPlayer === 'X' && label.toLowerCase() === 'x') ||
+        (currentPlayer === 'O' && label.toLowerCase() === 'o')) {
+      board[currentIndex] = currentPlayer;
+      inputReady = false;
+      winner = checkWinner();
+      if (winner) handleWin(winner);
+      else currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     }
+  }
 
-    drawBoard();
-
-    // Spielerzug
-    if (!winner && inputReady && board[currentIndex] === '') {
-        if ((currentPlayer === 'X' && label.toLowerCase() === 'x') || 
-            (currentPlayer === 'O' && label.toLowerCase() === 'o')) {
-            console.log(`Setze ${currentPlayer} auf Position ${currentIndex}`);
-            board[currentIndex] = currentPlayer;
-            inputReady = false;
-            winner = checkWinner();
-            if (!winner) {
-                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-            }
-        }
-    }
-
-    // KI-Zug nur im Modus "Spieler vs. KI"
-    if (gameMode === 'AI' && !winner && currentPlayer === 'O') {
-        aiMove();
-        winner = checkWinner(); // Prüfen, ob die KI gewonnen hat
-        if (!winner) {
-            currentPlayer = 'X'; // Wechsel zurück zum Spieler
-        }
-    }
+  if (gameMode === 'AI' && !winner && currentPlayer === 'O') {
+    aiMove();
+    winner = checkWinner();
+    if (winner) handleWin(winner);
+    else currentPlayer = 'X';
+  }
 }
 
 function classifyVideo() {
-    classifier.classify(video, gotResult); 
+  classifier.classify(video, gotResult);
 }
 
 function gotResult(results) {
-    if (results && results[0]) {
-        label = results[0].label; 
-    }
-    classifyVideo(); 
+  if (results && results[0]) {
+    label = results[0].label;
+  }
+  classifyVideo();
 }
 
 function keyPressed() {
-    if (winner) return;
+  if (winner) return;
 
-    let moved = false;
+  let moved = false;
 
-    // Bewegung auf dem Spielfeld
-    if (key === 'ArrowRight') {
-        currentIndex = (currentIndex + 1) % 9;
-        moved = true;
-    } else if (key === 'ArrowLeft') {
-        currentIndex = (currentIndex + 8) % 9;
-        moved = true;
-    } else if (key === 'ArrowUp') {
-        currentIndex = (currentIndex + 6) % 9;
-        moved = true;
-    } else if (key === 'ArrowDown') {
-        currentIndex = (currentIndex + 3) % 9;
-        moved = true;
-    }
+  if (key === 'ArrowRight') currentIndex = (currentIndex + 1) % 9;
+  else if (key === 'ArrowLeft') currentIndex = (currentIndex + 8) % 9;
+  else if (key === 'ArrowUp') currentIndex = (currentIndex + 6) % 9;
+  else if (key === 'ArrowDown') currentIndex = (currentIndex + 3) % 9;
 
-    // Eingabe wieder aktivieren, wenn der Spieler eine Bewegung macht
-    if (moved) {
-        console.log("Aktuelle Position:", currentIndex);
-        inputReady = true;
-    }
+  inputReady = true;
 }
 
 function drawBoard() {
-    let size = 100; 
-    for (let i = 0; i < 9; i++) {
-        let x = (i % 3) * size + 20; 
-        let y = floor(i / 3) * size + 340; 
+  let size = 100;
+  for (let i = 0; i < 9; i++) {
+    let x = (i % 3) * size + 45;
+    let y = floor(i / 3) * size + 2;
 
-        if (board[i] === 'X') fill('#F1A8C6');
-        else if (board[i] === 'O') fill('#C2CDFF');
-        else fill('#FFECEA');
+    if (board[i] === 'X') fill('#F1A8C6');
+    else if (board[i] === 'O') fill('#C2CDFF');
+    else fill('#FFECEA');
 
-        stroke('#424790'); 
-        rect(x, y, size, size); 
+    stroke('#424790');
+    rect(x, y, size, size);
 
-        fill('#424790'); 
-        textSize(36);
-        textAlign(CENTER, CENTER);
-        text(board[i], x + size / 2, y + size / 2); 
-        
-        if (i === currentIndex) {
-            noFill();
-            stroke('#EB5200');
-            strokeWeight(3);
-            rect(x + 2, y + 2, size - 4, size - 4);
-            strokeWeight(1);
-        }
+    fill('#424790');
+    textSize(36);
+    textAlign(CENTER, CENTER);
+    text(board[i], x + size / 2, y + size / 2);
+
+    if (i === currentIndex) {
+      noFill();
+      stroke('#EB5200');
+      strokeWeight(3);
+      rect(x + 2, y + 2, size - 4, size - 4);
+      strokeWeight(1);
     }
+  }
 }
 
 function checkWinner() {
-    const combos = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-    ];
-    for (let combo of combos) {
-        const [a, b, c] = combo;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            if (board[a] === 'X') scoreX++;
-            if (board[a] === 'O') scoreO++;
-            return board[a];
-        }
+  const combos = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+  ];
+  for (let combo of combos) {
+    const [a, b, c] = combo;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      if (board[a] === 'X') scoreX++;
+      if (board[a] === 'O') scoreO++;
+      return board[a];
     }
-    if (!board.includes('')) return "Unentschieden";
-    return null;
+  }
+  if (!board.includes('')) return "Unentschieden";
+  return null;
 }
 
 function resetGame() {
-    board = ['', '', '', '', '', '', '', '', ''];
-    currentIndex = 0;
-    inputReady = true;
-    currentPlayer = 'X';
-    winner = null;
+  board = ['', '', '', '', '', '', '', '', ''];
+  currentIndex = 0;
+  inputReady = true;
+  currentPlayer = 'X';
+  winner = null;
+  showWinnerMessage = false;
+  clearTimeout(messageTimer);
+  select('#overlay').style('display', 'none');
 }
 
 function aiMove() {
-    console.log("KI macht einen Zug...");
-
-    // 1. Prüfen, ob die KI gewinnen kann
-    for (let i = 0; i < board.length; i++) {
-        if (board[i] === '') {
-            board[i] = 'O';
-            if (checkWinner() === 'O') {
-                console.log("KI gewinnt!");
-                return;
-            }
-            board[i] = ''; // Rückgängig machen
-        }
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] === '') {
+      board[i] = 'O';
+      if (checkWinner() === 'O') return;
+      board[i] = '';
     }
-
-    // 2. Prüfen, ob der Spieler gewinnen kann, und blockieren
-    for (let i = 0; i < board.length; i++) {
-        if (board[i] === '') {
-            board[i] = 'X';
-            if (checkWinner() === 'X') {
-                board[i] = 'O'; // Blockieren
-                console.log("KI blockiert!");
-                return;
-            }
-            board[i] = ''; // Rückgängig machen
-        }
+  }
+  for (let i = 0; i < board.length; i++) {
+    if (board[i] === '') {
+      board[i] = 'X';
+      if (checkWinner() === 'X') {
+        board[i] = 'O';
+        return;
+      }
+      board[i] = '';
     }
+  }
 
-    // 3. Andernfalls das erste freie Feld wählen
-    let emptyFields = board.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
-    let randomIndex = emptyFields[Math.floor(Math.random() * emptyFields.length)];
-    board[randomIndex] = 'O';
-    console.log(`KI setzt O auf Position ${randomIndex}`);
+  let emptyFields = board.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+  let randomIndex = emptyFields[Math.floor(Math.random() * emptyFields.length)];
+  board[randomIndex] = 'O';
+}
+
+function handleWin(winner) {
+  let msg = '';
+  if (winner === 'X' || winner === 'O') {
+    msg = `Spieler ${winner} hat gewonnen!`;
+    if (gameMode === 'AI' && winner === 'O') msg = 'KI hat gewonnen!';
+  } else {
+    msg = 'Unentschieden!';
+  }
+
+  select('#overlayText').html(msg);
+  select('#overlay').style('display', 'flex');
+
+  // Starte Konfetti
+  confetti();
+
+  messageTimer = setTimeout(() => {
+    select('#overlay').style('display', 'none');
+  }, 5000);
+}
+
+// Konfetti mit JSConfetti
+function confetti() {
+  const jsConfetti = new JSConfetti();
+  jsConfetti.addConfetti({
+    emojis: ['🌟', '✨', '⭐️'],
+    emojiSize: 50,
+    confettiNumber: 150,
+  });
 }

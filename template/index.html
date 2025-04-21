@@ -1,79 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #FFECEA; /* Hintergrundfarbe */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Teachable</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #FFECEA;
+    }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-        }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        h1 {
-            margin: 20px 0;
-            text-align: center;
-            color: #424790; /* Dunkles Blau für die Überschrift */
-        }
+    h1 {
+      margin: 20px 0 40px; /* mehr Abstand unter der Überschrift */
+      color: #424790;
+      font-size: 56px;
+      text-align: center;
+    }
 
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px; /* Abstand zwischen den Elementen */
-            flex-grow: 1;
-        }
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
 
-        #sketch {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
 
-        canvas {
-            margin-top: 10px;
-        }
+    #status {
+      text-align: center;
+      color: #424790;
+      font-size: 16px;
+      line-height: 1.2;
+      margin-bottom: 0px;
+    }
 
-        button {
-            background-color: #F1A8C6; /* Rosa für die Buttons */
-            border: none;
-            padding: 10px 20px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-        }
+    #sketch {
+      margin-top: 0px;
+    }
 
-        button:hover {
-            background-color: #EB5200; /* Orange beim Hover */
-        }
+    button {
+      background-color: #F1A8C6;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
 
-        a {
-            color: #424790; /* Dunkles Blau für den Link */
-            text-decoration: none;
-            font-size: 14px;
-        }
+    button:hover {
+      background-color: #EB5200;
+    }
 
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    /* Overlay für Gewinnanzeige */
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 236, 234, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #overlayText {
+      font-size: 64px;
+      color: #EB5200;
+      font-weight: bold;
+      text-align: center;
+      animation: blink 0.8s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    
+  <h1>Tic Tac Teachable!</h1>
 
-    <script src="lib/ml5.1.2.1.min.js"></script>
-    <script src="lib/p5.min.js"></script>
-    <script src="index.js"></script>
+  <main>
+    <div id="controls">
+      <button id="pvpButton">Spieler vs. Spieler</button>
+      <button id="aiButton">Spieler vs. KI</button>
+      <button id="resetButton">Spiel zurücksetzen</button>
+    </div>
+
+    <div id="status">
+      <p id="labelText">Erkannt:</p>
+      <p id="playerText">Spieler:</p>
+      <p id="winnerText" style="display: none;">Gewinner:</p>
+    </div>
+
+    <div id="sketch"></div>
+  </main>
+
+  <!-- Overlay für Gewinner-Anzeige -->
+  <div id="overlay">
+    <div id="overlayText">Spieler X hat gewonnen!</div>
+  </div>
+
+  <!-- Bibliotheken -->
+  <script src="lib/ml5.1.2.1.min.js"></script>
+  <script src="lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
+  <script src="index.js"></script>
 </body>
 </html>
